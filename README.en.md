@@ -600,7 +600,8 @@ The script will:
 
 1. Pre-flight checks (Python / Docker / ports)
 2. **Install the upstream workbuddy2api** — clone, generate a random `api_key`, fix
-   directory ownership, build and start the container, wait for readiness
+   directory ownership, pull `registry.cn-shenzhen.aliyuncs.com/xdock/workbuddy2api:latest`
+   and start the container without building, wait for readiness
 3. Install the console — deploy code, install dependencies, register the systemd service
 4. Verify and print the access URL and initial password
 

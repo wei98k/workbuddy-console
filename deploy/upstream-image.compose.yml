@@ -1,0 +1,5 @@
+# 与上游 docker-compose.yml 叠加使用，保留原有端口、网络、挂载和配置。
+# 显式 pull 后使用 up --no-build，避免退回本地源码构建。
+services:
+  workbuddy2api:
+    image: registry.cn-shenzhen.aliyuncs.com/xdock/workbuddy2api:latest

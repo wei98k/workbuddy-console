@@ -516,7 +516,7 @@ sudo bash deploy/install.sh
 
 1. 环境预检（Python / Docker / 端口）
 2. **安装上游 workbuddy2api** —— 克隆、生成随机 `api_key`、修正目录属主、
-   构建并启动容器、等待就绪
+   拉取 `registry.cn-shenzhen.aliyuncs.com/xdock/workbuddy2api:latest` 并启动容器、等待就绪
 3. 安装管理端 —— 部署代码、装依赖、注册 systemd 服务
 4. 验证并打印访问地址与初始密码
 

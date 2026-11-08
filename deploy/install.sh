@@ -112,6 +112,12 @@ check_port() {
 check_port "$UPSTREAM_PORT" "上游 workbuddy2api"
 check_port "$MANAGER_PORT" "管理端"
 
+# 上游运行镜像统一由覆盖文件指定，不改写上游原有的卷、网络和配置。
+upstream_compose() {
+  $COMPOSE -f "${UPSTREAM_DIR}/docker-compose.yml" \
+    -f "${SRC_DIR}/deploy/upstream-image.compose.yml" "$@"
+}
+
 # ── 1. 安装上游 workbuddy2api ─────────────────────────────
 step "1/4 上游 workbuddy2api"
 
@@ -121,12 +127,9 @@ elif [ "$HAVE_DOCKER" -eq 0 ]; then
   warn "无 Docker，跳过上游安装。请自行部署 workbuddy2api 于 :${UPSTREAM_PORT}"
 elif [ -f "${UPSTREAM_DIR}/config.json" ]; then
   ok "已存在上游部署（${UPSTREAM_DIR}），保留现有配置与账号"
-  if [ -d "${UPSTREAM_DIR}/.git" ]; then
-    info "如需升级上游：cd ${UPSTREAM_DIR} && git pull && ${COMPOSE} up -d --build"
-  fi
-  # 确保容器在运行
-  ( cd "$UPSTREAM_DIR" && $COMPOSE up -d ) >/dev/null 2>&1 || \
-    warn "上游容器启动失败，请检查：cd ${UPSTREAM_DIR} && ${COMPOSE} logs"
+  info "拉取并启动指定的 workbuddy2api 镜像（保留已有配置与账号）"
+  upstream_compose pull workbuddy2api
+  upstream_compose up -d --no-build workbuddy2api
 else
   info "未检测到上游部署，开始安装到 ${UPSTREAM_DIR}"
 
@@ -222,8 +225,9 @@ PYEOF
   chown -R 10001:10001 auths data
   ok "账号目录已就绪（属主 10001）"
 
-  info "构建并启动上游容器（首次构建需数分钟）"
-  $COMPOSE up -d --build
+  info "拉取并启动指定的 workbuddy2api 镜像"
+  upstream_compose pull workbuddy2api
+  upstream_compose up -d --no-build workbuddy2api
 
   info "等待上游就绪…"
   for i in $(seq 1 60); do

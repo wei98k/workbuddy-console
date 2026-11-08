@@ -564,7 +564,7 @@ def update_upstream(rep: Reporter) -> None:
     # 4) 恢复安全基线
     enforce_local_bind(rep)
 
-    # 5) 预检 + 重建 + 等待就绪（见 rebuild_upstream）
+    # 5) 拉取远程镜像 + 启动 + 等待就绪（见 rebuild_upstream）
     rebuild_upstream(rep)
 
     # 6) 清版本检测缓存
@@ -577,23 +577,18 @@ def update_upstream(rep: Reporter) -> None:
 
 
 def rebuild_upstream(rep: Reporter) -> None:
-    """预检 Dockerfile → 重建上游容器 → 等待就绪。
+    """拉取远程镜像 → 无本地构建地启动上游容器 → 等待就绪。
 
-    抽出来是因为它有**两个调用点**：
-      · 常规的上游更新（上面那段 git 流程之后）；
-      · 面板更新时同步了包内自带的上游源码之后（源码变了必须重建才生效）。
+    常规上游更新与管理端同步包内上游文件之后共用此流程。
+    基础 compose 保留用户的网络、卷等配置，仅用随 deploy 分发的覆盖文件
+    统一镜像地址；不依赖本地 Dockerfile 或 COPY 源文件。
     """
-    missing = _missing_copy_sources()
-    if missing:
-        rep.log('构建预检未通过：Dockerfile 引用了不存在的文件', 'error')
-        for m in missing:
-            rep.log(f'  缺少 {m}', 'error')
-        rep.log('这是上游代码本身的问题（不是你配置的问题）。'
-                '可在「设置 → 系统更新」把上游固定到上一个可用提交，或等待上游修复。', 'error')
-        raise RuntimeError('上游 Dockerfile 引用了不存在的文件：' + ', '.join(missing))
+    base_compose = UPSTREAM_DIR / 'docker-compose.yml'
+    image_compose = Path(__file__).resolve().parent / 'upstream-image.compose.yml'
+    for compose in (base_compose, image_compose):
+        if not compose.is_file():
+            raise RuntimeError(f'未找到 compose 配置文件：{compose}；请确认 deploy/ 已完整分发')
 
-    # 6) 重建并启动
-    rep.log('重建并启动上游容器（首次可能需数分钟）…')
     compose_cmd = _compose_cmd(rep)
     if compose_cmd is None:
         # 容器镜像已内置 compose 插件（见 Dockerfile）；真走到这里说明用户
@@ -606,26 +601,24 @@ def rebuild_upstream(rep: Reporter) -> None:
             '  宿主机部署请安装 docker compose 插件或 docker-compose。\n'
             '  自查：容器内执行 `docker compose version` 与 `ls /usr/local/lib/docker/cli-plugins/`。'
         )
-    rc, out = run(compose_cmd + ['up', '-d', '--build'], cwd=UPSTREAM_DIR, rep=rep, check=False)
+    compose_cmd += ['-f', str(base_compose), '-f', str(image_compose)]
+    rep.log('拉取上游远程镜像（workbuddy2api）…')
+    rc, out = run(compose_cmd + ['pull', 'workbuddy2api'],
+                  cwd=UPSTREAM_DIR, rep=rep, check=False)
     if rc != 0:
-        hint = _diagnose_build_failure(out)
-        rep.log(f'重建失败（exit {rc}）', 'error')
-        if hint:
-            rep.log(f'原因判断：{hint}', 'error')
-        # exit 127 = 选中的 compose 命令**实际不存在**。这只有两种可能：
-        # ① 探测通过、执行时文件没了（罕见）；② 执行的是**旧版更新器**——
-        #    旧版没有上面那段探测，会直接去跑 docker-compose（issue #55）。
-        # 两种都要把它指出来：否则用户只能看到一行「命令不存在」，无从判断。
-        if rc == 127:
-            rep.log('诊断：选中的 compose 命令在执行时不存在。'
-                    '若上面的日志里**没有**「compose 探测」那一行，说明本次执行的是'
-                    '旧版更新器（新版会先探测并打出结果）——请重新更新管理端并确认'
-                    '容器已用新镜像重启，再重试。', 'error')
-        # 构建失败时 compose 不会动已在运行的容器，明确说明当前服务状态
-        _report_service_state(rep)
-        raise RuntimeError('上游重建失败' + (f'：{hint}' if hint else '，请查看上方日志'))
+        message = f'上游镜像拉取失败（exit {rc}），未执行启动：{out.strip()}'
+        rep.log(message, 'error')
+        raise RuntimeError(message)
 
-    # 6) 等待就绪
+    rep.log('使用已拉取的镜像启动上游容器（不进行本地构建）…')
+    rc, out = run(compose_cmd + ['up', '-d', '--no-build', 'workbuddy2api'],
+                  cwd=UPSTREAM_DIR, rep=rep, check=False)
+    if rc != 0:
+        message = f'上游容器启动失败（exit {rc}）：{out.strip()}'
+        rep.log(message, 'error')
+        raise RuntimeError(message)
+
+    # 等待就绪
     rep.log('等待上游就绪…')
     if wait_health(f'http://127.0.0.1:{UPSTREAM_PORT}/healthz', 90, rep):
         rep.log('上游已就绪')

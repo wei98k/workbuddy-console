@@ -313,22 +313,17 @@ class ComposeCommandTest(unittest.TestCase):
     def test_missing_compose_raises_actionable_error(self) -> None:
         """都没有时要报「怎么修」，而不是让用户对着 No such file 发呆。"""
         m = self.mod
-        with mock.patch.object(m, '_has_compose_v2', return_value=False), \
-             mock.patch.object(m, '_has_compose_v1', return_value=False), \
-             mock.patch.object(m, '_read_upstream_ref', return_value=''), \
-             mock.patch.object(m, '_compose_looks_customized', return_value=False), \
-             mock.patch.object(m, '_missing_copy_sources', return_value=[]):
-            (m.UPSTREAM_DIR / '.git').mkdir(parents=True, exist_ok=True)
+        with tempfile.TemporaryDirectory() as tmp, \
+             mock.patch.object(m, 'UPSTREAM_DIR', Path(tmp)), \
+             mock.patch.object(m, '_has_compose_v2', return_value=False), \
+             mock.patch.object(m, '_has_compose_v1', return_value=False):
+            (Path(tmp) / 'docker-compose.yml').write_text('services: {}\n', encoding='utf-8')
             rep = _Rep()
-            try:
-                with self.assertRaises(RuntimeError) as ctx:
-                    m.update_upstream(rep)
-                msg = str(ctx.exception)
-                self.assertIn('compose', msg)
-                self.assertIn('Dockerfile', msg, '应给出可执行的修法')
-            finally:
-                import shutil as _sh
-                _sh.rmtree(m.UPSTREAM_DIR / '.git', ignore_errors=True)
+            with self.assertRaises(RuntimeError) as ctx:
+                m.rebuild_upstream(rep)
+            msg = str(ctx.exception)
+            self.assertIn('compose', msg)
+            self.assertIn('Dockerfile', msg, '应给出可执行的修法')
 
 
 class ComposeLocalCustomizationTest(unittest.TestCase):

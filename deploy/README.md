@@ -11,13 +11,15 @@
 ## 〇、上游源码从哪来（随发布包分发）
 
 上游 workbuddy2api 的源码**随本项目的发布包一起分发**（包内 `upstream/`），
-装的时候不用去任何外部地址取。影响如下：
+配置模板与辅助脚本仍取自这份源码；容器统一使用远程镜像
+`registry.cn-shenzhen.aliyuncs.com/xdock/workbuddy2api:latest`，不再本地构建上游。
+安装和更新时会先拉取镜像，因此需要能访问阿里云镜像仓库。影响如下：
 
 | 场景 | 现在的状态 |
 |---|---|
-| **已经在跑**的部署 | **不受影响**。上游源码在你机器上、镜像也是本地构建的；面板的一键更新会沿用现有源码重建上游，面板自己照常更新 |
-| **新装** | 直接用包内那份（下面的脚本会自动识别） |
-| **更新上游代码** | 跟着管理端一起更新（一键更新会把包内那份同步进来）；要改代码就改本地那份，或用 `UPSTREAM_SRC` 换一份 |
+| **已经在跑**的部署 | 安装脚本或上游重建流程会切换至指定镜像，保留已有配置、挂载和网络 |
+| **新装** | 从包内源码取得配置模板与辅助脚本，拉取指定镜像启动 |
+| **更新上游代码** | 源码仍可同步以更新辅助脚本，但运行的 Go 服务以指定镜像为准；本地 Go 改动不会自动编译进镜像 |
 
 ### 包内自带，开箱即用
 
@@ -50,13 +52,18 @@ sudo bash deploy/install.sh --skip-upstream
 ### 以后怎么更新上游代码
 
 用面板里的**一键更新**即可 —— 它会把包内那份上游源码同步进 `/opt/workbuddy2api`
-（只增改，不动 `config.json` / `auths/` / `data/`），**有变化才重建容器**。
-随包分发的上游没有 `git pull` 可拉；要改代码请改本地那份（或用 `UPSTREAM_SRC`
-覆盖一份新的），再：
+（只增改，不动 `config.json` / `auths/` / `data/`），有变化时拉取指定镜像并重建容器。
+仅刷新运行镜像时，可在宿主机手工执行（按实际安装目录调整路径）：
 
 ```bash
-cd /opt/workbuddy2api && docker compose up -d --build
+docker compose -f /opt/workbuddy2api/docker-compose.yml \
+  -f /opt/workbuddy-manager/deploy/upstream-image.compose.yml pull workbuddy2api
+docker compose -f /opt/workbuddy2api/docker-compose.yml \
+  -f /opt/workbuddy-manager/deploy/upstream-image.compose.yml up -d --no-build workbuddy2api
 ```
+
+覆盖文件只指定镜像，沿用原有的端口、卷、网络与启动参数；不要省略覆盖文件或使用
+`--build`，否则会回到上游原有的本地构建流程。
 
 这三样务必保留：`config.json`（含 `api_key`）、`auths/`（账号授权）、`data/`。
 
@@ -83,7 +90,7 @@ sudo bash deploy/install.sh
 
 1. 环境预检（Python ≥3.9、Docker、端口占用检查）
 2. **安装上游 workbuddy2api** —— 取源码（本地目录或 git 地址）、生成随机 `api_key`、
-   设置目录属主、构建并启动容器、等待就绪
+   设置目录属主、拉取指定镜像并启动容器、等待就绪
 3. 安装管理端 —— 部署代码、装依赖、注册 systemd 服务
 4. 验证两条链路并打印访问地址与初始密码
 
@@ -346,7 +353,7 @@ curl -s http://127.0.0.1:7864/healthz             # 含上游连通性
 
 # 升级
 cd /opt/workbuddy-manager && git pull              # 管理端代码
-cd /opt/workbuddy2api && git pull && docker compose up -d --build  # 上游
+# 上游镜像：见前文双 -f 的 pull / up --no-build 命令
 ```
 
 ---
@@ -385,9 +392,9 @@ curl -s http://127.0.0.1:7863/healthz
 chown -R 10001:10001 /opt/workbuddy2api/auths /opt/workbuddy2api/data
 ```
 
-**Q：首次构建上游很慢**
-上游是 Go 项目，首次 `docker compose up --build` 需拉取基础镜像并编译，
-视网络情况可能需要几分钟，属正常现象。
+**Q：首次拉取上游很慢或失败**
+上游不再本地编译，使用 `registry.cn-shenzhen.aliyuncs.com/xdock/workbuddy2api:latest`。
+请确认能访问该仓库；拉取失败时安装或更新会停止，不会退回本地构建。
 
 **Q：构建管理端镜像失败 / 启动后打开页面显示 ERR_CONNECTION_REFUSED**
 
