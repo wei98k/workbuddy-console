@@ -40,7 +40,7 @@ sudo UPSTREAM_SRC=/opt/workbuddy2api bash deploy/install.sh
 sudo UPSTREAM_SRC=/path/to/workbuddy2api-<版本>.tar.gz bash deploy/install.sh
 
 # 2) 从你自己的 git 副本拉
-sudo UPSTREAM_REPO=https://github.com/<你的账号>/workbuddy2api.git bash deploy/install.sh
+sudo UPSTREAM_REPO=git@github.com:wei98k/workbuddy2api.git bash deploy/install.sh
 
 # 3) 上游已手工装好，只想装面板
 sudo bash deploy/install.sh --skip-upstream
@@ -48,6 +48,9 @@ sudo bash deploy/install.sh --skip-upstream
 
 优先级：`UPSTREAM_SRC` → 发布包自带的 `upstream/` → 目标目录里已有的 git 仓库
 → `UPSTREAM_REPO` 克隆。`UPSTREAM_DIR` 默认 `/opt/workbuddy2api`。
+默认 Git 地址为 `git@github.com:wei98k/workbuddy2api.git`（与本地上游的 `origin` 一致），
+使用 SSH 需要部署机已配置 GitHub SSH 密钥；无密钥时可用 `UPSTREAM_REPO` 或
+`WB_UPSTREAM_REPO`（更新器）覆盖为 `https://github.com/wei98k/workbuddy2api.git`。
 
 ### 以后怎么更新上游代码
 

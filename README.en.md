@@ -4,7 +4,7 @@
 
 **Web console for Tencent CodeBuddy account pools · OpenAI-compatible reverse proxy**
 
-A web frontend for [`workbuddy2api`](https://github.com/Sliverkiss/workbuddy2api):
+A web frontend for [`workbuddy2api`](https://github.com/wei98k/workbuddy2api):
 bulk account onboarding via QR code, automatic daily check-in, API key distribution,
 IP access control, request logs and usage stats — all in one panel.
 
@@ -37,7 +37,7 @@ Published and discussed in the [**LINUX DO**](https://linux.do) community — �
 
 ## What is this
 
-`workbuddy2api` (its original repository has been deleted by its author) wraps a Tencent CodeBuddy
+`workbuddy2api`, maintained at [wei98k/workbuddy2api](https://github.com/wei98k/workbuddy2api), wraps a Tencent CodeBuddy
 account pool into an OpenAI-compatible API (written in Go). Its capabilities are complete,
 but they are command-line only: adding an account means running a script, checking status
 means `curl /status`, and handing out API keys has no interface at all.
@@ -70,8 +70,8 @@ it makes a capable upstream gateway visible and manageable. The two fit together
   code for it, so the upstream can stay lean
 
 Contributions are welcome: both panel and upstream-source issues and ideas belong in
-[this repository](https://github.com/ithtelab/workbuddy-manager/issues) — the original
-upstream repo is gone, and its source is now maintained here.
+[this repository](https://github.com/ithtelab/workbuddy-manager/issues).
+The upstream source is maintained at [wei98k/workbuddy2api](https://github.com/wei98k/workbuddy2api).
 
 ---
 
@@ -956,7 +956,7 @@ release notes, and creates a Release with the archives attached.
 - [**LINUX DO**](https://linux.do) — the community where this project is published and discussed
 - [**linux-do/cdk**](https://github.com/linux-do/cdk) (MIT) — design tokens and floating
   dock component; this project's UI follows its visual language
-- [**Sliverkiss/workbuddy2api**](https://github.com/Sliverkiss/workbuddy2api) — the account
+- [**wei98k/workbuddy2api**](https://github.com/wei98k/workbuddy2api) — the account
   pool and OpenAI-compatible proxy underneath (MIT; its source is distributed with
   this project's releases)
 - [**lbjlaq/Antigravity-Manager**](https://github.com/lbjlaq/Antigravity-Manager) — feature

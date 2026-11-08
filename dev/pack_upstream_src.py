@@ -2,8 +2,8 @@
 
 ## 为什么有这个脚本
 
-上游源码不再有公开的 git 地址可拉。本项目的公开仓库
-**不放上游代码**（它不属于我们），但用户装的时候需要它——所以做法是：
+上游源码独立维护于 https://github.com/wei98k/workbuddy2api。
+本项目仓库不重复存放上游代码，为方便发布包用户取得配置模板和辅助脚本：
 
     dev/ 里的这个脚本  →  打成 workbuddy2api-src.tar.gz
                        →  上传到一个**固定 tag 的 Release**（upstream-src）
@@ -113,8 +113,8 @@ def main() -> int:
         (work / 'UPSTREAM-SRC.txt').write_text(
             f"""本目录是上游 workbuddy2api 的源码快照，随本项目的 Release 一同分发。
 
-上游原仓库（github.com/Sliverkiss/workbuddy2api）已被其作者删除；源码由本项目
-维护者留存并继续维护。许可为 MIT（见 LICENSE，版权归原作者）——再分发请保留
+上游源码仓库：https://github.com/wei98k/workbuddy2api。
+许可为 MIT（见 LICENSE，版权归原作者）——再分发请保留
 LICENSE 与版权声明。
 
 打包说明：{args.stamp or '（未填写）'}

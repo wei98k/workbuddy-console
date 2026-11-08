@@ -14,8 +14,8 @@
 # 上游源码从哪来（按优先级）：
 #   1) 发布包里自带的 upstream/             下载 Release 包时已内嵌，离线可装
 #   2) UPSTREAM_SRC=<本地目录或 tar.gz>     用你自己那份源码
-#   3) UPSTREAM_REPO=<git 地址>             从 git 拉（默认地址不可用，
-#                                           请指向你自己的副本 fork / 镜像）
+#   3) UPSTREAM_REPO=<git 地址>             从 git 拉（默认 wei98k/workbuddy2api，
+#                                           SSH 克隆需要已配置 GitHub SSH 密钥）
 #
 # 说明：workbuddy2api 的账号登录（扫码）是交互式的，无法自动化；
 #       安装完成后通过本管理端的「添加账号」扫码即可。
@@ -25,10 +25,9 @@ set -euo pipefail
 # ── 可配置项（均可用环境变量覆盖）─────────────────────────
 APP_DIR="${APP_DIR:-/opt/workbuddy-manager}"
 UPSTREAM_DIR="${UPSTREAM_DIR:-/opt/workbuddy2api}"
-# 上游原仓库 Sliverkiss/workbuddy2api 自 2026-09-23 起已不可访问（404）。
-# 默认值保留原地址只为「已有副本的人不必改代码」；新装请用 UPSTREAM_SRC
-# 指向本地源码，或把 UPSTREAM_REPO 改成你自己的副本。
-UPSTREAM_REPO="${UPSTREAM_REPO:-https://github.com/Sliverkiss/workbuddy2api.git}"
+# 与本地 workbuddy2api 的 origin 保持一致；SSH 克隆需配置 GitHub SSH 密钥。
+# 无 SSH 密钥时可用 UPSTREAM_REPO 覆盖为 HTTPS 地址，或用 UPSTREAM_SRC 指向本地源码。
+UPSTREAM_REPO="${UPSTREAM_REPO:-git@github.com:wei98k/workbuddy2api.git}"
 UPSTREAM_SRC="${UPSTREAM_SRC:-}"
 UPSTREAM_PORT="${UPSTREAM_PORT:-7863}"
 MANAGER_PORT="${MANAGER_PORT:-7864}"
@@ -184,13 +183,13 @@ else
     if ! git clone --depth 1 "$UPSTREAM_REPO" "$UPSTREAM_DIR"; then
       die "克隆上游仓库失败。
 
-  默认的上游地址已经克隆不下来。请改用下面任一方式后重跑：
+  请检查仓库权限、GitHub SSH 密钥与网络连接，或改用下面任一方式后重跑：
 
     # 1) 用本地那份源码（你已有部署时，就在 UPSTREAM_DIR，例如 /opt/workbuddy2api）
     sudo UPSTREAM_SRC=/opt/workbuddy2api bash deploy/install.sh
 
-    # 2) 用你自己的副本（fork / 自有镜像）
-    sudo UPSTREAM_REPO=https://github.com/<你的账号>/workbuddy2api.git bash deploy/install.sh
+    # 2) 配置好 GitHub SSH 密钥后，重试当前上游地址
+    sudo UPSTREAM_REPO=git@github.com:wei98k/workbuddy2api.git bash deploy/install.sh
 
     # 3) 已经手工装好上游，只是让本脚本跳过
     sudo bash deploy/install.sh --skip-upstream"

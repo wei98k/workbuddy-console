@@ -890,9 +890,8 @@ class ForkImageWorkflowTest(unittest.TestCase):
 class UpstreamSourceFallbackTest(unittest.TestCase):
     """上游仓库没了之后的安装路径（install.sh 的 UPSTREAM_SRC）。
 
-    上游原仓库（Sliverkiss/workbuddy2api）自 2026-09-23 起不可访问，克隆那一步对
-    新装用户是死的。脚本因此支持三种本地来源，并且**这是新用户第一次接触本项目
-    时会走的路径**，不能悄悄回归。
+    Git 克隆可能因权限或网络失败，安装脚本也支持本地源码和随包源码。
+    这些来源的安装与失败提示都应保持可用，不能悄悄回归。
 
     两条断言方式并用：
       · 源码级：三种来源分支、同目录短路、失败提示的三条退路都在；

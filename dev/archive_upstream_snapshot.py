@@ -9,8 +9,8 @@
 用它跑一遍就能得到同款归档。产物落在维护者本机（不在仓库里）。
 
 
-背景：上游仓库（Sliverkiss/workbuddy2api）已不可访问（404），本地那份是 blob-less
-部分克隆——**历史 blob 大多缺失且再也拉不回来**，但 HEAD 快照（287 个文件）完整。
+当前上游仓库为 wei98k/workbuddy2api。本脚本归档指定本地克隆的 HEAD；
+若输入是 blob-less 部分克隆，归档仅保留已取得的对象，不保证历史完整。
 产物：
   <归档>/snapshot/           HEAD 快照 + 新建的 git 仓库（可 push 成新家）
   <归档>/repo.git/           克隆的 .git（完整克隆时含全部历史对象）
@@ -27,7 +27,7 @@ from pathlib import Path
 
 SRC = Path(sys.argv[1]) if len(sys.argv) > 1 else Path('/tmp/upcheck2')
 DEST = Path('D:/Leo/桌面/workbuddy2api-archive')
-UPSTREAM = 'https://github.com/Sliverkiss/workbuddy2api'
+UPSTREAM = 'https://github.com/wei98k/workbuddy2api'
 FINAL = ''   # 运行时从克隆里读（见 main）
 ARCHIVED_ON = '2026-09-23'
 
@@ -98,9 +98,8 @@ def main() -> int:
     run(['git', '-c', 'user.name=workbuddy-manager', '-c', 'user.email=noreply@local',
          'commit', '-q', '-m',
          f'import: workbuddy2api 最后一份源码快照（上游 {FINAL}）\n\n'
-         f'上游仓库 {UPSTREAM} 于 {ARCHIVED_ON} 起不可访问（404）。此快照取自本地\n'
-         f'克隆的 HEAD（{FINAL}），源码完整可构建；逐版本历史因原克隆是 blob-less\n'
-         f'部分克隆而无法完整还原，故以单次导入提交重新开始。\n\n'
+         f'上游仓库 {UPSTREAM}。此快照取自本地克隆的 HEAD（{FINAL}），\n'
+         f'以单次导入提交保存源码；原克隆的历史另存于 repo.git。\n\n'
          f'原项目版权归 Sliverkiss，MIT 许可（见 LICENSE）。'], cwd=snap)
     print('新仓库首个提交:', run(['git', 'log', '--oneline', '-1'], cwd=snap).strip())
 
@@ -113,7 +112,7 @@ def main() -> int:
 
 - 原仓库：{UPSTREAM}
 - 最后提交：`{FINAL}`（{ARCHIVED_ON} 取得）
-- 归档原因：原仓库已不可访问（GitHub 返回 404；作者账号仍在，是仓库本身没了）
+- 归档原因：保存本地源码快照与已取得的 Git 历史，便于备份和再分发
 
 ## 里面有什么
 

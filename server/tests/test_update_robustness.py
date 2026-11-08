@@ -147,7 +147,7 @@ class UpstreamRefPinning(unittest.TestCase):
 class UpstreamRemoteGoneTest(unittest.TestCase):
     """上游仓库没了的时候，更新日志要把原因说对。
 
-    背景：上游原仓库 Sliverkiss/workbuddy2api 自 2026-09-23 起已不可访问。
+    模拟上游远端删除或权限不足，不能误报成网络故障。
     此前拉取失败一律写「git fetch 失败（网络问题？）」——用户会去查网络、
     反复重试一个必然失败的地址。真正的原因与出路要写清楚：源码还在本地、
     本次照常重建；以后要更新就指向自己的副本。
@@ -159,7 +159,7 @@ class UpstreamRemoteGoneTest(unittest.TestCase):
 
     GONE = [
         "remote: Repository not found.\nfatal: repository 'https://github.com/x/y.git/' not found",
-        "fatal: repository 'https://github.com/Sliverkiss/workbuddy2api.git/' not found",
+        "fatal: repository 'https://github.com/wei98k/workbuddy2api.git/' not found",
         'fatal: could not read from remote repository',
         "fatal: 'https://example.com/x.git' does not appear to be a git repository",
     ]

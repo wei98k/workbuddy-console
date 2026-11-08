@@ -40,7 +40,7 @@ UPSTREAM_DIR = Path(os.environ.get('WB_UPSTREAM_DIR') or '/opt/workbuddy2api')
 UPSTREAM_PORT = int(os.environ.get('WB_UPSTREAM_PORT') or 7863)
 MANAGER_PORT = int(os.environ.get('WB_MANAGER_PORT') or 7864)
 MANAGER_REPO = os.environ.get('WB_MANAGER_REPO') or 'ithtelab/workbuddy-manager'
-UPSTREAM_REPO = os.environ.get('WB_UPSTREAM_REPO') or 'https://github.com/Sliverkiss/workbuddy2api.git'
+UPSTREAM_REPO = os.environ.get('WB_UPSTREAM_REPO') or 'git@github.com:wei98k/workbuddy2api.git'
 SERVICE_NAME = os.environ.get('WB_SERVICE_NAME') or 'workbuddy-web'
 DATA_DIR = Path(os.environ.get('WB_DATA_DIR') or INSTALL_DIR / 'data')
 STATUS_FILE = Path(os.environ.get('WB_UPDATE_STATUS') or DATA_DIR / 'update-status.json')
@@ -436,9 +436,8 @@ def _sync_bundled_upstream(src: Path, rep: Reporter) -> int:
 def _fetch_failed_hint(out: str, pinned: str = '') -> str:
     """拉取上游失败时给用户的话——分清「远端没了」与「网络/引用有问题」。
 
-    上游原仓库（Sliverkiss/workbuddy2api）自 2026-09-23 起已不可访问。
-    git 在这种情况下的报错是 `Repository not found` / `could not read from remote`，
-    直接透出去容易被当成网络抖动，用户会反复重试同一个必然失败的地址。
+    仓库删除、权限不足或 SSH 未授权时可能出现 `Repository not found` /
+    `could not read from remote`；应提示检查仓库配置，而不是一律归因于网络。
     """
     low = (out or '').lower()
     # 注意别写成「repo**sitory** not found」这种连在一起的写法：git 的原文是

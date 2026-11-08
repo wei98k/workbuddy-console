@@ -2763,7 +2763,7 @@
 ---
 ## [1.0.0] - 2026-09-11
 
-首个正式版本：为 [`workbuddy2api`](https://github.com/Sliverkiss/workbuddy2api)
+首个正式版本：为 [`workbuddy2api`](https://github.com/wei98k/workbuddy2api)
 提供完整的 Web 管理控制台与 OpenAI 兼容反代网关。
 
 ### 新增

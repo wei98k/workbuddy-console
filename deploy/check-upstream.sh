@@ -14,7 +14,7 @@
 # ============================================================
 set -euo pipefail
 
-UPSTREAM_REPO="${UPSTREAM_REPO:-https://github.com/Sliverkiss/workbuddy2api.git}"
+UPSTREAM_REPO="${UPSTREAM_REPO:-git@github.com:wei98k/workbuddy2api.git}"
 PINNED="${1:-}"
 
 WORK="$(mktemp -d)"
@@ -22,17 +22,16 @@ trap 'rm -rf "$WORK"' EXIT
 
 echo "[·] 拉取上游仓库（浅克隆，不取文件内容）…"
 if ! CLONE_OUT="$(git clone --quiet --filter=blob:none --no-checkout "$UPSTREAM_REPO" "$WORK/up" 2>&1)"; then
-  # 分两种：仓库没了 vs 网络/代理问题。前者不是故障，别再让人去查代理。
+  # 分清仓库权限/地址错误与网络问题；两者都应阻止跳过检查。
   # 判据取 git/GitHub 的原始报文：`Repository not found` / `repository '…' not found`
   # / `404`。不加裸的 "not found"——别的失败里也可能出现这两个词（如 DNS 报错），
   # 误判成「仓库没了」会让人跳过本该做的检查。
   case "$CLONE_OUT" in
     *Repositor*"not found"* | *404*)
-      echo "[—] 上游仓库不可访问（$UPSTREAM_REPO）——自 2026-09-23 起该地址不再可用。"
-      echo "    这一步从此不再需要：上游已停更，不必再核对新提交，直接发版即可。"
-      echo "    （若你已把上游迁到自己的副本，可用 UPSTREAM_REPO=<地址> 指过来，"
-      echo "      本脚本会继续按老规矩检查。）"
-      exit 0 ;;
+      echo "[✗] 上游仓库不可访问（${UPSTREAM_REPO}），无法完成发版检查。" >&2
+      echo "    请确认仓库地址、访问权限及 GitHub SSH 密钥，或设置 UPSTREAM_REPO。" >&2
+      echo "    git 的报错原文：${CLONE_OUT}" >&2
+      exit 2 ;;
   esac
   echo "[✗] 无法访问上游仓库（网络或代理问题）" >&2
   echo "    git 的报错原文：${CLONE_OUT##*$'\n'}" >&2

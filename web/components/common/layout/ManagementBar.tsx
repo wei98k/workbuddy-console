@@ -678,7 +678,7 @@ export function ManagementBar() {
                         </div>
                       </Link>
                       <Link
-                        href="https://github.com/Sliverkiss/workbuddy2api"
+                        href="https://github.com/wei98k/workbuddy2api"
                         target="_blank"
                         rel="noopener noreferrer"
                         className="inline-flex items-center gap-2 rounded-full bg-muted px-3 py-2 transition-colors hover:bg-muted/80"
